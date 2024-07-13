@@ -17,9 +17,10 @@ game_background = pygame.image.load('images/sky.png')
 game_background = pygame.transform.scale(game_background, (1200, 600))  # Adjust background size
 game_goblin = pygame.image.load('images/goblin4x.png')
 game_orb = pygame.image.load('images/orb4x.png')
+game_enemy = pygame.image.load('images/minotaur4x.png')
 game_heart = pygame.image.load('images/heart4x.png')
 game_title = game_font.render('Angry Goblin', False, 'Black')
-game_heart_count = game_font.render('Hearts collected: ', False, 'Black')
+# game_heart_count = game_font.render('Hearts collected: ', False, 'Black')
 
 bgX = 0
 bgX2 = game_background.get_width()
@@ -34,6 +35,8 @@ hearts_collected = 0
 
 orb_pos_x = random.randint(1200, 1400)  # Adjust initial position for larger screen
 orb_pos_y = random.randint(0, 550)
+enemy_pos_x = random.randint(1400, 1600)  # Adjust initial position for larger screen
+enemy_pos_y = random.randint(0, 550)
 hrt_pos_x = random.randint(1000, 1300)  # Adjust initial position for larger screen
 hrt_pos_y = random.randint(0, 550)
 hrt_is_orb = False  # State variable to track if the heart is an orb
@@ -93,18 +96,26 @@ while True:
             hrt_pos_y = random.randint(0, 550)
             hrt_is_orb = False  # Reset state when repositioning
 
+        enemy_pos_x -= 4  # Adjust enemy speed
+        if enemy_pos_x < -50:
+            enemy_pos_x = random.randint(1400, 1600)  # Adjust respawn position for larger screen
+            enemy_pos_y = random.randint(0, 550)
+
     # Draw the background
     screen.blit(game_background, (bgX, 0))
     screen.blit(game_background, (bgX2, 0))
 
     # Draw the goblin, orb, and heart
     screen.blit(game_goblin, (gob_pos_x, gob_pos_y))
+    screen.blit(game_enemy, (enemy_pos_x, enemy_pos_y))
     screen.blit(game_orb, (orb_pos_x, orb_pos_y))
     if hrt_is_orb:
         screen.blit(game_orb, (hrt_pos_x, hrt_pos_y))
     else:
         screen.blit(game_heart, (hrt_pos_x, hrt_pos_y))
     screen.blit(game_title, (500, 10))  # Adjust title position for larger screen
+
+    game_heart_count = game_font.render(f'Hearts collected: {hearts_collected}', False, 'Black')
     screen.blit(game_heart_count, (10, 10))
 
     # Create rectangles for collision detection
@@ -115,11 +126,17 @@ while True:
     # Check for collision if the game has started
     if game_started:
         if goblin_rect.colliderect(orb_rect):
-            print("Game Over!")
+            print("Hit an orb!")
             death_sound.play()
-            pygame.time.delay(2000)  # Wait for 2 seconds to allow the sound to play
-            pygame.quit()
-            exit()
+            pygame.time.delay(500)  # Wait for 0.5 seconds to allow the sound to play
+            hearts_collected -= 1
+            orb_pos_x = random.randint(1200, 1400)
+            orb_pos_y = random.randint(0, 550)
+            if hearts_collected <= 0:
+                print("Game Over!")
+                pygame.quit()
+                exit()
+
         if goblin_rect.colliderect(heart_orb_rect):
             if hrt_is_orb:
                 print("Game Over!")
@@ -129,7 +146,7 @@ while True:
                 exit()
             else:
                 hearts_collected += 1
-                print(f"Hearts collected: {hearts_collected}")
+                print(f"Collected Hearts: {hearts_collected}")
                 hrt_pos_x = random.randint(1000, 1300)
                 hrt_pos_y = random.randint(0, 550)
                 hrt_is_orb = False  # Reset state when collected
