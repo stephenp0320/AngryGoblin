@@ -9,12 +9,13 @@ game_font = pygame.font.Font(None, 30)
 
 jump_sound = pygame.mixer.Sound('sounds/BounceYoFrankie.flac')
 death_sound = pygame.mixer.Sound('sounds/death_bell_sound_effect.wav')
-
+scream_sound = pygame.mixer.Sound('sounds/scream_horror1.mp3')
 pygame.mixer.music.load('sounds/background.mp3')
 pygame.mixer.music.play(-1)
 
 game_background = pygame.image.load('images/sky.png')
 game_background = pygame.transform.scale(game_background, (1200, 600))  # Adjust background size
+game_enemy_background = pygame.transform.scale(pygame.image.load('images/JWDLx5AZBtI.jpg'), (1200, 600))
 game_goblin = pygame.image.load('images/goblin4x.png')
 game_orb = pygame.image.load('images/orb4x.png')
 game_enemy = pygame.image.load('images/minotaur4x.png')
@@ -41,7 +42,13 @@ hrt_pos_x = random.randint(1000, 1300)  # Adjust initial position for larger scr
 hrt_pos_y = random.randint(0, 550)
 hrt_is_orb = False  # State variable to track if the heart is an orb
 
+dark_poison = False
+dark_poison_start = 0
+blackout_duration = 3000  # 3 seconds
+
 while True:
+    current_time = pygame.time.get_ticks()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -54,6 +61,13 @@ while True:
                 jump_sound.play()
 
     if game_started:
+        if dark_poison:
+            if current_time - dark_poison_start < blackout_duration:  # Draw the enemy background
+                pygame.display.update()
+                continue
+            else:
+                dark_poison = False
+
         bgX -= 1.4
         bgX2 -= 1.4
         if bgX < game_background.get_width() * -1:
@@ -85,7 +99,7 @@ while True:
             hrt_is_orb = True
 
         # Move the orb and heart
-        orb_pos_x -= 5
+        orb_pos_x -= 10
         if orb_pos_x < -50:
             orb_pos_x = random.randint(1200, 1400)  # Adjust respawn position for larger screen
             orb_pos_y = random.randint(0, 550)
@@ -120,8 +134,10 @@ while True:
 
     # Create rectangles for collision detection
     goblin_rect = game_goblin.get_rect(topleft=(gob_pos_x, gob_pos_y))
+    enemy_rect = game_enemy.get_rect(topleft=(enemy_pos_x, enemy_pos_y))
     orb_rect = game_orb.get_rect(topleft=(orb_pos_x, orb_pos_y))
-    heart_orb_rect = game_orb.get_rect(topleft=(hrt_pos_x, hrt_pos_y)) if hrt_is_orb else game_heart.get_rect(topleft=(hrt_pos_x, hrt_pos_y))
+    heart_orb_rect = game_orb.get_rect(topleft=(hrt_pos_x, hrt_pos_y)) if hrt_is_orb else game_heart.get_rect(
+        topleft=(hrt_pos_x, hrt_pos_y))
 
     # Check for collision if the game has started
     if game_started:
@@ -136,6 +152,15 @@ while True:
                 print("Game Over!")
                 pygame.quit()
                 exit()
+
+        if goblin_rect.colliderect(enemy_rect):
+            print("Poisoned!")
+            scream_sound.play()
+            pygame.time.delay(500)  # Wait for 0.5 seconds to allow the sound to play
+            dark_poison = True
+            dark_poison_start = current_time
+            enemy_pos_x = random.randint(1200, 1400)
+            enemy_pos_y = random.randint(0, 550)
 
         if goblin_rect.colliderect(heart_orb_rect):
             if hrt_is_orb:
