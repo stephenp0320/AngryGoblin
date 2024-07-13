@@ -7,6 +7,16 @@ screen = pygame.display.set_mode((1200, 600))  # Increased screen size
 clock = pygame.time.Clock()
 game_font = pygame.font.Font(None, 30)
 
+jump_sound = pygame.mixer.Sound('sounds/BounceYoFrankie.flac')
+death_sound = pygame.mixer.Sound('sounds/death_bell_sound_effect.wav')
+
+
+pygame.mixer.music.load('sounds/background.mp3')
+pygame.mixer.music.play(-1)
+
+
+
+
 game_background = pygame.image.load('images/sky.png')
 game_background = pygame.transform.scale(game_background, (1200, 600))  # Adjust background size
 game_goblin = pygame.image.load('images/goblin4x.png')
@@ -40,6 +50,7 @@ while True:
                 if not game_started:
                     game_started = True
                 gob_vel_y = jump_power
+                jump_sound.play()
 
     if game_started:
         bgX -= 1.4
@@ -58,6 +69,7 @@ while True:
         if gob_pos_y >= 550:
             gob_pos_y = 550
             print("game over")
+            #pygame.time.delay(2000)
             pygame.quit()
             exit()
 
